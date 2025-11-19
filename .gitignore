@@ -1,0 +1,7 @@
+# --- Archivos de Sistema ---
+__pycache__/
+*.pyc
+
+# --- Credenciales (¡CRÍTICO!) ---
+*.json
+.env

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de Logos (YOLO + Google)</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        .card { border: 1px solid #ccc; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        #resultados { margin-top: 20px; white-space: pre-wrap; background: #f4f4f4; padding: 10px; border-radius: 5px; display: none;}
+        .loading { color: #666; font-style: italic; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Pruebas de IA Logos</h1>
+        <p>Carga el PDF de tu etiqueta para analizar:</p>
+        
+        <input type="file" id="fileInput" accept=".pdf" />
+        <button onclick="analizarImagen()">Analizar Etiqueta</button>
+
+        <p id="loadingMessage" class="loading">Procesando con YOLO y Google Cloud Vision... espera un momento...</p>
+
+        <div id="resultados"></div>
+    </div>
+
+    <script>
+        async function analizarImagen() {
+            const fileInput = document.getElementById('fileInput');
+            const resultadosDiv = document.getElementById('resultados');
+            const loadingMsg = document.getElementById('loadingMessage');
+
+            if (fileInput.files.length === 0) {
+                alert("Por favor selecciona un archivo PDF primero.");
+                return;
+            }
+
+            //Mostrar carga
+            loadingMsg.style.display = 'block';
+            resultadosDiv.style.display = 'none';
+            resultadosDiv.innerText = "";
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                //Hacemos la petición a tu API local
+                const response = await fetch("http://127.0.0.1:8000/analizar-etiqueta-pdf/", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                //Mostrar Resultados en Texto
+                const textoYolo = data.detections_yolo.length > 0 ? data.detections_yolo.join(", ") : "Ninguno";
+                const textoGoogle = data.detections_google.length > 0 ? data.detections_google.join(", ") : "Ninguno";
+
+                resultadosDiv.innerHTML = `<strong>Análisis Completado:</strong><br><br>` +
+                                          `<strong>YOLO (Etiquetas):</strong> ${textoYolo}<br>` +
+                                          `<strong>Google (Marcas):</strong> ${textoGoogle}`;
+                resultadosDiv.style.display = 'block';
+
+                //Descargar el PDF automáticamente
+                if (data.pdf_file_base64) {
+                    descargarPDF(data.pdf_file_base64, "resultado_analisis.pdf");
+                }
+
+            } catch (error) {
+                console.error(error);
+                resultadosDiv.innerText = `Error: ${error.message}`;
+                resultadosDiv.style.display = 'block';
+            } finally {
+                loadingMsg.style.display = 'none';
+            }
+        }
+
+        function descargarPDF(base64String, fileName) {
+            const linkSource = `data:application/pdf;base64,${base64String}`;
+            const downloadLink = document.createElement("a");
+            downloadLink.href = linkSource;
+            downloadLink.download = fileName;
+            downloadLink.click();
+        }
+    </script>
+
+</body>
+</html>
