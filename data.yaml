@@ -1,0 +1,24 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 9
+names:
+  [
+    "NOM",
+    "NOM-CE",
+    "NOM-EAC",
+    "NOM-NYCE",
+    "NOM-UL",
+    "alto voltaje",
+    "cont. especial",
+    "choque electr",
+    "doble aislamiento",
+  ]
+
+roboflow:
+  workspace: nopro
+  project: my-first-project-rra5u
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/nopro/my-first-project-rra5u/dataset/3
